@@ -10,6 +10,7 @@ use Illuminate\Notifications\Slack\BlockKit\Blocks\DividerBlock;
 use Illuminate\Notifications\Slack\BlockKit\Blocks\HeaderBlock;
 use Illuminate\Notifications\Slack\BlockKit\Blocks\ImageBlock;
 use Illuminate\Notifications\Slack\BlockKit\Blocks\SectionBlock;
+use Illuminate\Notifications\Slack\BlockKit\Blocks\InputBlock;
 use Illuminate\Notifications\Slack\Contracts\BlockContract;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Traits\Conditionable;
@@ -167,6 +168,18 @@ class SlackMessage implements Arrayable
     }
 
     /**
+     * Add a new Actions block to the message.
+     */
+    public function inputBlock(Closure $callback): self
+    {
+        $this->blocks[] = $block = new InputBlock();
+
+        $callback($block);
+
+        return $this;
+    }
+
+    /**
      * Set a custom image icon the message should use.
      */
     public function emoji(string $emoji): self
@@ -253,7 +266,7 @@ class SlackMessage implements Arrayable
 
         $optionalFields = array_filter([
             'text' => $this->text,
-            'blocks' => ! empty($this->blocks) ? array_map(fn (BlockContract $block) => $block->toArray(), $this->blocks) : null,
+            'blocks' => !empty($this->blocks) ? array_map(fn(BlockContract $block) => $block->toArray(), $this->blocks) : null,
             'icon_emoji' => $this->icon,
             'icon_url' => $this->image,
             'metadata' => $this->metaData?->toArray(),
@@ -261,7 +274,7 @@ class SlackMessage implements Arrayable
             'unfurl_links' => $this->unfurlLinks,
             'unfurl_media' => $this->unfurlMedia,
             'username' => $this->username,
-        ], fn ($value) => $value !== null);
+        ], fn($value) => $value !== null);
 
         return array_merge([
             'channel' => $this->channel,
@@ -279,6 +292,6 @@ class SlackMessage implements Arrayable
             dd($this->toArray());
         }
 
-        dd('https://app.slack.com/block-kit-builder#'.rawurlencode(json_encode(Arr::except($this->toArray(), ['username', 'text', 'channel']), true)));
+        dd('https://app.slack.com/block-kit-builder#' . rawurlencode(json_encode(Arr::except($this->toArray(), ['username', 'text', 'channel']), true)));
     }
 }
